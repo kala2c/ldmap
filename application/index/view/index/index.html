@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>鲁东地图导览</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    ul,li {
+      list-style-type: none;
+    }
+    html,
+    body,
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    #control {
+      /* display: flex; */
+      position: absolute;
+      top: 300px;
+      left: 5px;
+      width: 80px;
+      height: auto;
+      color: #fff;
+      background-color: #1e9fff;
+    }
+    .nav .nav_item {
+      height: 35px;
+      text-align: center;
+      line-height: 30px;
+      border-bottom: 1px solid #eee;
+    }
+    .nav_item.selected {
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="control">
+    <ul class="nav">
+      <li data-id="0" class="nav_item selected">全部</li>
+      {volist name="placeType" id="item"}
+      <li data-id="{$item.id}" class="nav_item">{$item.name}</li>
+      {/volist}
+    </ul>
+  </div>
+  <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+  <script charset="utf-8" src="https://map.qq.com/api/js?v=2.exp&key=BXNBZ-IQAWR-AXWW3-WFJ2V-VK5J3-LQFUQ"></script>
+  <script>
+    $(function() {
+      var map = new qq.maps.Map(document.getElementById("map"), {
+        zoom: 16,  //缩放级别
+        center: new qq.maps.LatLng(37.521891, 121.365358), //中心点坐标
+        mapTypeId: qq.maps.MapTypeId.ROADMAP
+      });
+
+      var markers = [];
+      renderMarker(0);
+      $('#control').click(function(e) {
+        var $target = $(e.target);
+        var id = $target.attr('data-id');
+        renderMarker(id);
+        $('.nav_item').removeClass('selected');
+        $target.addClass('selected');
+      })
+
+      function renderMarker(placeType) {
+        $.get("/api/buildings", {place_type: placeType}, function(response, status) {
+          for (let i = 0; i < markers.length; i ++) {
+            markers[i].marker.setMap(null);
+            markers[i].label.setMap(null);
+          }
+          markers.length = 0;
+          response.forEach(item => {
+            var marker = createMarker(item, map);
+            markers.push(marker);
+          });
+        })
+      }
+    })
+
+      
+    function createMarker(markerInfo, map) {
+      var position = new qq.maps.LatLng(markerInfo.latitude, markerInfo.longitude);
+      var marker = new qq.maps.Marker({
+        position: position,
+        map: map,
+        content: markerInfo.name
+      });
+      var label = new qq.maps.Label({
+          position: position,
+          map: map,
+          content: markerInfo.name
+      });
+      var anchor = new qq.maps.Point(0, 20),
+            size = new qq.maps.Size(200, 200),
+            origin = new qq.maps.Point(0, 0),
+            scaleSize = new qq.maps.Size(20, 20),
+          markerIcon = new qq.maps.MarkerImage(
+        "/images/marker.png",
+        size, 
+        origin,
+        anchor,
+        scaleSize
+      );
+      marker.setIcon(markerIcon);
+      return {
+        marker: marker,
+        label: label
+      };
+    }   
+  </script>
+</body>
+</html>

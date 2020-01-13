@@ -1,0 +1,169 @@
+{extend name="base" /}
+{block name="title"}
+坐标列表
+{/block}
+{block name="style"}
+<style>
+  .container {
+    padding: 15px;
+  }
+</style>
+{/block}
+{block name="content"}
+<div class="container">
+  <table class="layui-table">
+  <colgroup>
+  <!-- <col width="150"> -->
+  <!-- <col width="200"> -->
+  <!-- <col> -->
+  </colgroup>
+  <thead>
+  <tr>
+  <th>校区</th>
+  <th>分类</th>
+  <th>建筑名称</th>
+  <th>纬度</th>
+  <th>经度</th>
+  <th>地址</th>
+  <th>描述</th>
+  <th>操作</th>
+  </tr> 
+  </thead>
+  <tbody>
+  {volist name="list" id="item"}
+  <tr>
+      <td>{$item.campus.name}</td>
+      <td>{$item.placeType.name}</td>
+      <td>{$item.name}</td>
+      <td>{$item.latitude}</td>
+      <td>{$item.longitude}</td>
+      <td>{$item.address}</td>
+      <td>{$item.description}</td>
+  <td>
+      <a href="/admin/latlng/edit?id={$item.id}"type="button" class="layui-btn layui-btn-normal layui-btn-sm">修改</a>
+      <button data-id="{$item.id}" type="button" class="delete layui-btn layui-btn-danger layui-btn-sm">删除</button>
+  </td>
+  </tr>
+  {/volist}
+  </tbody>
+  </table>
+
+  <!-- 分页： -->
+  <div class="layui-box layui-laypage layui-laypage-default" id="layui-laypage-2">
+    <!-- 上一页 -->
+    {if ($page<=1)}
+        <a href="javascript:;" class="layui-laypage-prev layui-disabled">上一页</a>
+    {else /}
+        <a href="{$pageurl}?page={$page-1}" class="layui-laypage-prev jump">上一页</a>
+    {/if}
+    <!-- 首页显示 -->
+    {if ($page==1)}
+    <span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>1(首页)</em></span>
+    {else /}
+    <a href="{$pageurl}?page=1" class="jump">1(首页)</a>
+    {/if}
+    <!-- 首页显示 -->
+
+    <!-- 中间页码 -->
+    {if ($pageMax<15)} 
+        <!-- 当总页数小于15时 渲染全部页码 -->
+        {for start="2" end="$pageMax" name="i"}
+            {if ($page==$i)}
+            <span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>{$i}</em></span>
+            {else /}
+            <a href="{$pageurl}?page={$i}" class="jump">{$i}</a>
+            {/if}
+        {/for}
+    {else /}
+        <!-- 当总页数大于15时 渲染部分页码 -->
+        {if ($page<=7)}
+            <!-- 当前页码较少时 当前页码接近首页（差值小于5） 左侧无省略号 -->
+            {for start="2" end="$page+5" name="i"}
+                {if ($page==$i)}
+                <span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>{$i}</em></span>
+                {else /}
+                <a href="{$pageurl}?page={$i}" class="jump">{$i}</a>
+                {/if}
+            {/for}
+            <span class="layui-laypage-spr">…</span>
+        {elseif ($pageMax-$page<=7) /}
+            <!-- 当前页码较大时 当前页码接近尾页（差值小于5） 右侧无省略号 -->
+            <span class="layui-laypage-spr">…</span>
+            {for start="$page-5" end="$pageMax" name="i"}
+                {if ($page==$i)}
+                <span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>{$i}</em></span>
+                {else /}
+                <a href="{$pageurl}?page={$i}" class="jump">{$i}</a>
+                {/if}
+            {/for}
+        {else /}
+            <!-- 当前页码不大不小时 既不接近首页也不接近尾页（差值均大于5） 左右侧均有省略号 -->
+            <span class="layui-laypage-spr">…</span>
+            {for start="$page-5" end="$page+6" name="i"}
+                {if ($page==$i)}
+                <span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>{$i}</em></span>
+                {else /}
+                <a href="{$pageurl}?page={$i}" class="jump">{$i}</a>
+                {/if}
+            {/for}
+            <span class="layui-laypage-spr">…</span>
+        {/if}
+    {/if}
+    <!-- 中间页码 -->
+
+    <!-- 尾页显示 -->
+    {if ($pageMax > 1)}
+    <!--总页数大于1才能显示-->
+        {if ($page==$pageMax)}
+        <span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>{$pageMax}(尾页)</em></span>
+        {else /}
+        <a href="{$pageurl}?page={$pageMax}" class="jump">{$pageMax}(尾页)</a>
+        {/if}
+    {/if}
+    <!-- 尾页显示 -->
+
+    <!-- 下一页 -->
+    {if ($page>=$pageMax)}
+        <a href="javascript:;" class="layui-laypage-last layui-disabled">下一页</a>
+    {else /}
+        <a href="{$pageurl}?page={$page+1}" class="layui-laypage-last jump">下一页</a>
+    {/if}
+    <span>共{$total}条数据</span>
+    <!--  -->
+</div>
+</div>
+{/block}
+{block name="script"}
+<script>
+  layui.use(['element', 'layer'], function() {
+    var layer = layui.layer;
+    // 给每个页码按钮加上查询参数
+    $('.jump').each(function(index, element) {
+      var href = $(element).attr('href')+'&{$param}';
+      $(element).attr('href', href);
+    });
+
+    $('.delete').click(function(e) {
+      var id = $(e.target).attr('data-id');
+      layer.confirm('确认删除吗', function() {
+        // layer.msg('执行删除');
+        request(
+          {
+            url: "/admin/api/building/delete",
+            data: {id: id}
+          },
+          {
+            success: function(res, status) {
+              layer.msg(res.msg);
+              refresh();
+            },
+            error: function(res, status) {
+              layer.alert(res);
+            }
+          }
+        );
+      });
+    });
+  });
+  </script>
+{/block}
